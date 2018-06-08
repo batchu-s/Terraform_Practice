@@ -9,15 +9,34 @@ resource "aws_instance" "windows-resource" {
   key_name = "${aws_key_pair.mykey.key_name}"
   vpc_security_group_ids = "<sg-id>"
   subnet_id = "<subnet-id>"
+  user_data = <<EOF
+  <powershell>
+  net user ${var.INSTANCE_USERNAME} ${var.INSTANCE_PASSWORD} /add
+  net localgroup administrators ${var.INSTANCE_USERNAME} /add
+
+  winrm quickconfig -q
+  winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
+  winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+  winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+  winrm set winrm/config/service/auth '@{Basic="true"}'
+
+  netsh advfirewall firewall add rule name="WinRM 5985" dir=in localport=5985 action=allow
+  netsh advfirewall firewall add rule name="WinRM 5986" dir=in localport=5986 action=allow
+
+  net stop winrm
+  sc.exe config winrm start=auto
+  net start winrm
+  </powershell>
+  EOF
   tags{
-  Key = "Name"
-  value = "Windows-06082018"
+    key = "Name"
+    value = "Windows-06082018"
   }
 
 
-
   connection {
+    type = "winrm"
 		user = "${var.INSTANCE_USERNAME}"
-		private_key = "${file("${var.PATH_TO_PRIVATE_KEY}")}"
+		password = "${var.INSTANCE_PASSWORD}"
 	}
 }

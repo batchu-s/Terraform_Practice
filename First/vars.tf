@@ -16,5 +16,7 @@ variable "PATH_TO_PRIVATE_KEY" {
 	default = "mykey"
 }
 variable "INSTANCE_USERNAME" {
-	default = "Administrator"
+	default = "Siva"
 }
+
+variable "INSTANCE_PASSWORD" { }
